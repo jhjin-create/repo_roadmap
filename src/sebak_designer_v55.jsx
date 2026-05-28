@@ -2679,37 +2679,20 @@ const fileInputRef = useRef(null);
       const { text, isImagePdf, numPages, totalChars, pdf } = await extractPdfText(file);
       
       if (isImagePdf) {
-        // 2단계: 이미지 PDF로 판단 → 페이지를 이미지로 렌더링해 Vision용 base64 저장
-        if (numPages > 50) {
-          const ok = confirm(`이미지 PDF로 보입니다 (${numPages}페이지). 처리 시간이 길어집니다 (수 분 소요 가능). 계속할까요?`);
-          if (!ok) {
-            setPdfLoading(false);
-            return;
-          }
-        }
-        const images = await renderPdfPagesToImages(pdf, 2.5);
-        setPdfImages(images);
-        setPdfIsImageType(true);
-        // 학생부가 이미지면 텍스트는 placeholder만
-        setPdfText(`[이미지 PDF로 처리 — ${numPages}페이지를 Vision으로 분석 예정]\n생성 시 학생부 내용을 AI가 직접 이미지에서 읽어 분석합니다.`);
-        // 이미지 PDF에서는 이름 자동 추출도 Vision 사용 — 시간이 더 걸리고 비용도 들기에 1페이지만 사용
-        try {
-          if (images.length > 0) {
-            const nameResult = await callClaude(
-              `당신은 한국 고등학교 학생부 첫 페이지 이미지에서 학생 이름만 추출하는 도우미입니다.\n학생 이름(한국어 2~4자)을 찾아 이름만 출력하세요. 이름을 찾을 수 없으면 빈 문자열만 출력. 다른 설명·사족 금지.`,
-              "학생 이름을 찾아주세요.",
-              50,
-              MODEL_FAST,
-              [{ base64: images[0].base64, mediaType: images[0].mediaType }]
-            );
-            const cleanName = (nameResult || "").trim().replace(/[\s\n]/g, "");
-            if (cleanName && /^[가-힣]{2,4}$/.test(cleanName)) {
-              setStudentInfo(prev => ({ ...prev, 이름: cleanName }));
-            }
-          }
-        } catch (e) {
-          console.warn("이름 자동 추출 실패 (이미지 PDF):", e);
-        }
+        // 이미지 PDF 차단 — 정확도 문제로 텍스트 PDF만 허용
+        alert(
+          "❌ 이미지 PDF는 지원하지 않습니다.\n\n" +
+          "현재 업로드한 파일은 스캔본 또는 이미지 형태로 정확한 분석이 어렵습니다.\n\n" +
+          "✅ 해결 방법\n" +
+          "1. 나이스(NEIS)에서 학생부를 직접 PDF로 다운로드해 주세요\n" +
+          "2. 또는 한글(.hwp) 파일을 PDF로 변환해 주세요\n" +
+          "3. 텍스트가 직접 포함된 PDF만 정확한 결과를 보장합니다"
+        );
+        setPdfLoading(false);
+        setPdfText("");
+        setPdfImages([]);
+        setPdfIsImageType(false);
+        return;
       } else {
         // 텍스트 PDF — 기존 방식
         setPdfText(text);
