@@ -3310,6 +3310,9 @@ const fileInputRef = useRef(null);
       const identitySection = identityStatement.trim() 
         ? `\n[진로 정체성]\n"${identityStatement.trim()}"\n\n⚠️ 이 정체성은 학생이 인터뷰에서 도출한 진로 정체성입니다. 시스템 프롬프트의 [진로 정체성 활용 원칙]에 따라 처리하세요.\n`
         : "";
+
+      const levelInfo = DIFFICULTY_LEVELS[finalLevel] || DIFFICULTY_LEVELS[2];
+      const difficultySection = `\n[최종 탐구 Level: ${finalLevel}]\n- 이름: ${levelInfo.name}\n- 가이드: ${levelInfo.description}\n- 학생부 평균 Level: ${baseLevel}\n- 진정성 경고: ${authenticityWarning ? "true (결과물 끝에 경고 표시)" : "false"}\n`;
       
       const result = await callClaude(
         (studentInfo.학년 && studentInfo.학년.startsWith("1학년") ? SYSTEM_SUBJECT_FRESHMAN : SYSTEM_SUBJECT),
